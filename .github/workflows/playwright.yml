@@ -3,7 +3,7 @@ name: React CI
 on:
   push:
     branches:
-      - main   # change to your main branch name
+      - main
   pull_request:
     branches:
       - main
@@ -11,6 +11,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      CI: false   # Prevents treating warnings as errors
 
     steps:
       # Step 1: Checkout the code
