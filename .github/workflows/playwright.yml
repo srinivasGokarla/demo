@@ -45,5 +45,3 @@ jobs:
       - name: Deploy to Firebase Hosting
         run: npx firebase-tools deploy --only hosting --token "${{ secrets.FIREBASE_TOKEN }}"
 
-      - name: Show deployed URL
-        run:  "Your app is live at: https://${{ secrets.REACT_APP_FIREBASE_PROJECT_ID }}.web.app"
