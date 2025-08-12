@@ -1,0 +1,76 @@
+pipeline {
+  agent any
+  tools {
+    nodejs 'nodejs-18'
+  }
+
+  environment {
+    PATH = "${tool 'nodejs-18'}/bin:${env.PATH}"
+    // Map from Jenkins credentials
+    REACT_APP_FIREBASE_API_KEY = credentials('REACT_APP_FIREBASE_API_KEY')
+    REACT_APP_FIREBASE_AUTH_DOMAIN = credentials('REACT_APP_FIREBASE_AUTH_DOMAIN')
+    REACT_APP_FIREBASE_PROJECT_ID = credentials('REACT_APP_FIREBASE_PROJECT_ID')
+    REACT_APP_FIREBASE_STORAGE_BUCKET = credentials('REACT_APP_FIREBASE_STORAGE_BUCKET')
+    REACT_APP_FIREBASE_MESSAGING_SENDER_ID = credentials('REACT_APP_FIREBASE_MESSAGING_SENDER_ID')
+    REACT_APP_FIREBASE_APP_ID = credentials('REACT_APP_FIREBASE_APP_ID')
+    FIREBASE_TOKEN = credentials('FIREBASE_TOKEN')
+  }
+
+  stages {
+    stage('Checkout') {
+      steps { checkout scm }
+    }
+
+    stage('Create .env file') {
+      steps {
+        sh '''
+        echo "REACT_APP_FIREBASE_API_KEY=${REACT_APP_FIREBASE_API_KEY}" >> .env
+        echo "REACT_APP_FIREBASE_AUTH_DOMAIN=${REACT_APP_FIREBASE_AUTH_DOMAIN}" >> .env
+        echo "REACT_APP_FIREBASE_PROJECT_ID=${REACT_APP_FIREBASE_PROJECT_ID}" >> .env
+        echo "REACT_APP_FIREBASE_STORAGE_BUCKET=${REACT_APP_FIREBASE_STORAGE_BUCKET}" >> .env
+        echo "REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${REACT_APP_FIREBASE_MESSAGING_SENDER_ID}" >> .env
+        echo "REACT_APP_FIREBASE_APP_ID=${REACT_APP_FIREBASE_APP_ID}" >> .env
+        '''
+      }
+    }
+
+    stage('Install Dependencies') {
+      steps {
+        sh 'npm ci'
+        sh 'npx playwright install --with-deps'
+      }
+    }
+
+    stage('Build App') {
+      steps {
+        sh 'npm run build'
+      }
+    }
+
+    stage('Run E2E Tests') {
+      steps {
+        sh "npm run test:ci:with-server"
+      }
+      post {
+        always {
+          junit allowEmptyResults: true, testResults: 'reports/junit.xml'
+          archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
+          archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+        }
+      }
+    }
+
+    stage('Deploy to Firebase') {
+      when { expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' } }
+      steps {
+        sh 'npx firebase-tools deploy --only hosting,functions,firestore:rules,storage:rules --token "$FIREBASE_TOKEN"'
+      }
+    }
+  }
+
+  post {
+    failure {
+      echo 'Build or tests failed. See logs.'
+    }
+  }
+}
