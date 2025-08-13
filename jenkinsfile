@@ -5,7 +5,7 @@ pipeline {
     ansiColor('xterm')
   }
   tools {
-    nodejs 'nodejs-18'
+    nodejs 'nodejs-20'
   }
     triggers {
     // Optional: enable if you use GitHub webhooks instead
