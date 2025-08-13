@@ -9,7 +9,7 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     env:
-      CI: false  # prevent React warnings breaking build
+      CI: false
 
     steps:
       - name: Checkout code
@@ -36,8 +36,14 @@ jobs:
       - name: Install Browsers for Playwright
         run: npx playwright install --with-deps
 
+      - name: Start React App
+        run: npm start &
+      
+      - name: Wait for App to be Ready
+        run: npx wait-on http://localhost:3000
+
       - name: Run Playwright + Cucumber Tests
-        run: npm run test   # adjust if your test script differs
+        run: npm run test
 
       - name: Build React app
         run: npm run build
