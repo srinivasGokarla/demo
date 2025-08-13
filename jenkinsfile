@@ -1,7 +1,15 @@
 pipeline {
   agent any
+    options {
+    timestamps()
+    ansiColor('xterm')
+  }
   tools {
     nodejs 'nodejs-18'
+  }
+    triggers {
+    // Optional: enable if you use GitHub webhooks instead
+    // pollSCM('@daily')
   }
 
   environment {
@@ -14,12 +22,29 @@ pipeline {
     REACT_APP_FIREBASE_MESSAGING_SENDER_ID = credentials('REACT_APP_FIREBASE_MESSAGING_SENDER_ID')
     REACT_APP_FIREBASE_APP_ID = credentials('REACT_APP_FIREBASE_APP_ID')
     FIREBASE_TOKEN = credentials('FIREBASE_TOKEN')
+        // E2E base URL (used by steps)
+    TEST_BASE_URL = 'http://localhost:3000'
+    CI = 'true'
   }
 
   stages {
     stage('Checkout') {
-      steps { checkout scm }
+      when { branch 'main' }
+      steps {
+        checkout scm
+      }
     }
+
+      stage('Install Dependencies') {
+      steps {
+        sh 'node -v'
+        sh 'npm -v'
+        sh 'npm ci'
+        // Install browsers + OS deps for Playwright
+        sh 'npx playwright install --with-deps'
+      }
+    }
+
 
     stage('Create .env file') {
       steps {
@@ -34,43 +59,35 @@ pipeline {
       }
     }
 
-    stage('Install Dependencies') {
+    stage('E2E Tests (Playwright + Cucumber)') {
       steps {
-        sh 'npm ci'
-        sh 'npx playwright install --with-deps'
-      }
-    }
-
-    stage('Build App') {
-      steps {
-        sh 'npm run build'
-      }
-    }
-
-    stage('Run E2E Tests') {
-      steps {
-        sh "npm run test:ci:with-server"
+        // Start the static server from the build and run Cucumber once it's reachable
+        sh 'npm run test:ci:with-server'
       }
       post {
         always {
+          // Save reports even on failure
           junit allowEmptyResults: true, testResults: 'reports/junit.xml'
-          archiveArtifacts artifacts: 'reports/**', allowEmptyArchive: true
-          archiveArtifacts artifacts: 'playwright-report/**', allowEmptyArchive: true
+          archiveArtifacts artifacts: 'reports/**/*, cucumber-report.html, cucumber-report.json', allowEmptyArchive: true
         }
       }
     }
 
-    stage('Deploy to Firebase') {
-      when { expression { currentBuild.result == null || currentBuild.result == 'SUCCESS' } }
+stage('Deploy to Firebase') {
+      when { expression { currentBuild.currentResult == 'SUCCESS' } }
       steps {
-        sh 'npx firebase-tools deploy --only hosting,functions,firestore:rules,storage:rules --token "$FIREBASE_TOKEN"'
+        // Deploy only hosting by default (adjust if you also want rules/functions)
+        sh 'npx firebase-tools deploy --only hosting --token "$FIREBASE_TOKEN"'
       }
     }
   }
 
   post {
+    success {
+      echo '✅ Build, tests and deploy succeeded.'
+    }
     failure {
-      echo 'Build or tests failed. See logs.'
+      echo '❌ Build or tests failed. No deploy performed.'
     }
   }
 }

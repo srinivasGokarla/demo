@@ -11,17 +11,19 @@
     "firebase": "^12.1.0",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
+    "react-router-dom": "^6.30.1",
     "react-scripts": "5.0.1",
     "web-vitals": "^2.1.4"
   },
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
-    "test": "react-scripts test",
+    "serve:build": "serve -s build -l 3000",
+    "test": "cucumber-js test",
     "deploy": "firebase deploy --only hosting",
-    "test:ci": "playwright test --reporter=line",
+    "test:ci": "npx cucumber-js --require cucumber.js --format junit:reports/junit.xml --format progress",
+    "test:e2e": "npx cucumber-js --require cucumber.js",
     "test:ci:with-server": "start-server-and-test start http://localhost:3000 test:ci"
-
   },
   "eslintConfig": {
     "extends": [

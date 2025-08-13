@@ -1,0 +1,76 @@
+[
+  {
+    "description": "",
+    "elements": [
+      {
+        "description": "",
+        "id": "greeting-flow;user-enters-a-message-and-sees-their-greeting",
+        "keyword": "Scenario",
+        "line": 3,
+        "name": "User enters a message and sees their greeting",
+        "steps": [
+          {
+            "arguments": [],
+            "keyword": "Given ",
+            "line": 4,
+            "name": "I open the app",
+            "match": {
+              "location": "tests\\steps\\login.js:6"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 938620900
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "When ",
+            "line": 5,
+            "name": "I enter \"John Doe\" in the message field",
+            "match": {
+              "location": "tests\\steps\\login.js:12"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 145616799
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "And ",
+            "line": 6,
+            "name": "I click save",
+            "match": {
+              "location": "tests\\steps\\login.js:16"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 1627818800
+            }
+          },
+          {
+            "arguments": [],
+            "keyword": "Then ",
+            "line": 7,
+            "name": "I should see greeting \"Hello, John Doe\"",
+            "match": {
+              "location": "tests\\steps\\login.js:21"
+            },
+            "result": {
+              "status": "passed",
+              "duration": 16634000
+            }
+          }
+        ],
+        "tags": [],
+        "type": "scenario"
+      }
+    ],
+    "id": "greeting-flow",
+    "line": 1,
+    "keyword": "Feature",
+    "name": "Greeting Flow",
+    "tags": [],
+    "uri": "tests\\features\\login.feature"
+  }
+]

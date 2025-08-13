@@ -1,4 +1,7 @@
-Feature: Check app homepage
-  Scenario: Homepage shows My App
+Feature: Greeting Flow
+
+  Scenario: User enters a message and sees their greeting
     Given I open the app
-    Then I should see "My App"
+    When I enter "John Doe" in the message field
+    And I click save
+    Then I should see greeting "Hello, John Doe"

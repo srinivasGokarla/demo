@@ -1,13 +1,18 @@
-import Home  from '../src/pages/home'
+import React from 'react';
+import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import Home from './pages/home';
+import Greeting from './pages/Greeting';
 import './App.css';
-
-// install the Dependencies 
-// updating the projectId key in github
 
 function App() {
   return (
     <div className="App">
-     <Home/>
+      <Router>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/greeting" element={<Greeting />} />
+        </Routes>
+      </Router>
     </div>
   );
 }

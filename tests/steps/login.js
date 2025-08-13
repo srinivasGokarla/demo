@@ -1,24 +1,24 @@
-const { Given, Then, After } = require('@cucumber/cucumber');
-const { chromium } = require('playwright');
+const { Given, When, Then, setDefaultTimeout } = require('@cucumber/cucumber');
+const { expect } = require('@playwright/test');
 
-let browser;
-let page;
+setDefaultTimeout(20000);
 
 Given('I open the app', async function () {
-  browser = await chromium.launch();
-  page = await browser.newPage();
-  await page.goto(process.env.TEST_BASE_URL || 'http://localhost:5000');
+  await this.openBrowser();
+  this.page = await global.browser.newPage();
+  await this.page.goto('http://localhost:3000');
 });
 
-Then('I should see {string}', async function (text) {
-  const content = await page.textContent('body');
-  if (!content.includes(text)) {
-    await browser.close();
-    throw new Error(`Text "${text}" not found on page`);
-  }
-  await browser.close();
+When('I enter {string} in the message field', async function (message) {
+  await this.page.fill('input[type="text"]', message);
 });
 
-After(async function () {
-  if (browser) await browser.close();
+When('I click save', async function () {
+  await this.page.click('button[type="submit"]');
+  await this.page.waitForURL('http://localhost:3000/greeting', { timeout: 15000 });
+});
+
+Then('I should see greeting {string}', async function (expectedText) {
+  const locator = this.page.getByText(expectedText, { exact: false });
+  await expect(locator).toBeVisible({ timeout: 15000 });
 });
