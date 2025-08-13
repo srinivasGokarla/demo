@@ -19,7 +19,7 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "serve:build": "serve -s build -l 3000",
-    "test": "cucumber-js test",
+    "test": "cucumber-js test --require tests/support/hooks.js --exit",
     "deploy": "firebase deploy --only hosting",
     "test:ci": "npx cucumber-js --require cucumber.js --format junit:reports/junit.xml --format progress",
     "test:e2e": "npx cucumber-js --require cucumber.js",

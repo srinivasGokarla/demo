@@ -1,7 +1,14 @@
-const { After } = require('@cucumber/cucumber');
+const { AfterAll } = require('@cucumber/cucumber');
 
-After(async function () {
-  if (this.browser) {
-    await this.closeBrowser();
+AfterAll(async function () {
+  if (global.browser) {
+    await global.browser.close();
   }
+  if (global.context) {
+    await global.context.close();
+  }
+  if (global.page) {
+    await global.page.close();
+  }
+  process.exit(0); // Force exit if something is still holding the process
 });

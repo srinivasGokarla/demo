@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
-<testsuite name="Cucumber" time="12.216" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-08-13T08:11:05.557Z">
-  <testcase classname="Greeting Flow" name="User enters a message and sees their greeting" time="12.201">
+<testsuite name="Cucumber" time="2.063" tests="1" skipped="0" failures="0" errors="0" timestamp="2025-08-13T08:28:15.779Z">
+  <testcase classname="Greeting Flow" name="User enters a message and sees their greeting" time="2.05">
     <system-out><![CDATA[Given I open the app........................................................passed
 When I enter "John Doe" in the message field................................passed
 And I click save............................................................passed
