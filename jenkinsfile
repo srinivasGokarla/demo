@@ -1,16 +1,9 @@
 pipeline {
-  agent any
-    options {
-    timestamps()
-    ansiColor('xterm')
-  }
-  tools {
-    nodejs 'nodejs-20'
-  }
-    triggers {
-    // Optional: enable if you use GitHub webhooks instead
-    // pollSCM('@daily')
-  }
+    agent any
+
+    tools {
+        nodejs "NodeJS-20"
+    }
 
   environment {
     PATH = "${tool 'nodejs-18'}/bin:${env.PATH}"
@@ -27,67 +20,67 @@ pipeline {
     CI = 'true'
   }
 
-  stages {
-    stage('Checkout') {
-      when { branch 'main' }
-      steps {
-        checkout scm
-      }
-    }
-
-      stage('Install Dependencies') {
-      steps {
-        sh 'node -v'
-        sh 'npm -v'
-        sh 'npm ci'
-        // Install browsers + OS deps for Playwright
-        sh 'npx playwright install --with-deps'
-      }
-    }
-
-
-    stage('Create .env file') {
-      steps {
-        sh '''
-        echo "REACT_APP_FIREBASE_API_KEY=${REACT_APP_FIREBASE_API_KEY}" >> .env
-        echo "REACT_APP_FIREBASE_AUTH_DOMAIN=${REACT_APP_FIREBASE_AUTH_DOMAIN}" >> .env
-        echo "REACT_APP_FIREBASE_PROJECT_ID=${REACT_APP_FIREBASE_PROJECT_ID}" >> .env
-        echo "REACT_APP_FIREBASE_STORAGE_BUCKET=${REACT_APP_FIREBASE_STORAGE_BUCKET}" >> .env
-        echo "REACT_APP_FIREBASE_MESSAGING_SENDER_ID=${REACT_APP_FIREBASE_MESSAGING_SENDER_ID}" >> .env
-        echo "REACT_APP_FIREBASE_APP_ID=${REACT_APP_FIREBASE_APP_ID}" >> .env
-        '''
-      }
-    }
-
-    stage('E2E Tests (Playwright + Cucumber)') {
-      steps {
-        // Start the static server from the build and run Cucumber once it's reachable
-        sh 'npm run test:ci:with-server'
-      }
-      post {
-        always {
-          // Save reports even on failure
-          junit allowEmptyResults: true, testResults: 'reports/junit.xml'
-          archiveArtifacts artifacts: 'reports/**/*, cucumber-report.html, cucumber-report.json', allowEmptyArchive: true
+    stages {
+        stage('Checkout') {
+            steps {
+                git branch: 'main',
+                    url: 'https://github.com/srinivasGokarla/demo.git'
+            }
         }
-      }
+
+        stage('Install dependencies') {
+            steps {
+                bat 'npm install'
+            }
+        }
+
+        stage('Install Playwright Browsers') {
+            steps {
+                bat 'npx playwright install'
+            }
+        }
+
+        stage('Run Tests (Playwright + Cucumber)') {
+            steps {
+                // Exit immediately if tests fail
+                bat 'npm test || exit /b 1'
+            }
+        }
+
+        stage('Build React App') {
+            when {
+                expression { currentBuild.resultIsBetterOrEqualTo('SUCCESS') }
+            }
+            steps {
+                bat 'npm run build'
+            }
+        }
+         stage('Install Firebase CLI') {
+    steps {
+        bat 'npm install -g firebase-tools'
+    }
+}
+
+
+     stage('Deploy to Firebase') {
+    steps {
+        withCredentials([string(credentialsId: 'firebase-token', variable: 'FIREBASE_TOKEN')]) {
+            bat """
+                firebase deploy --only hosting --token %FIREBASE_TOKEN%
+            """
+        }
+    }
+}
+
+
     }
 
-stage('Deploy to Firebase') {
-      when { expression { currentBuild.currentResult == 'SUCCESS' } }
-      steps {
-        // Deploy only hosting by default (adjust if you also want rules/functions)
-        sh 'npx firebase-tools deploy --only hosting --token "$FIREBASE_TOKEN"'
-      }
+    post {
+        success {
+            echo "✅ Pipeline completed successfully!"
+        }
+        failure {
+            echo "❌ Pipeline failed. Check the logs above."
+        }
     }
-  }
-
-  post {
-    success {
-      echo '✅ Build, tests and deploy succeeded.'
-    }
-    failure {
-      echo '❌ Build or tests failed. No deploy performed.'
-    }
-  }
 }
